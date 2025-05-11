@@ -13,6 +13,7 @@ func Register(s *discordgo.Session) error {
 	guildID := config.GetDevGuild()
 	cmdList := []*discordgo.ApplicationCommand{
 		registerTestCommand(),
+		registerAskCommand(),
 	}
 
 	for _, cmd := range cmdList {

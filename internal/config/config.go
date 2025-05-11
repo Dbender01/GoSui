@@ -9,3 +9,7 @@ func GetBotToken() string {
 func GetDevGuild() string {
 	return os.Getenv("TEST_GUILD_ID")
 }
+
+func GetAnthropicKey() string {
+	return os.Getenv("ANTHROPIC_KEY")
+}
