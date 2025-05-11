@@ -1,53 +1,40 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/dbender01/GoSui/internal/commands"
+	"github.com/dbender01/GoSui/internal/config"
 )
 
 func main() {
-	//Creates discord session
-	Token := os.Getenv("DISCORD_BOT_TOKEN")
-	if Token == "" {
-		fmt.Println("DISCORD_BOT_TOKEN not set")
-		return
-	}
+	token := config.GetBotToken()
 
-	dg, err := discordgo.New("Bot " + Token)
+	dg, err := discordgo.New("Bot " + token)
 	if err != nil {
-		fmt.Println("Error creating discord session: ", err)
-		return
+		log.Fatalf("Failed to create bot session: %v", err)
 	}
-	// Register the message handler
-	dg.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
-		// Ignore messages from the bot itself
-		if m.Author.ID == s.State.User.ID {
-			return
-		}
 
-		// Simple response
-		if m.Content == "!hello" {
-			s.ChannelMessageSend(m.ChannelID, "Hello, world!")
-		}
-	})
+	dg.AddHandler(commands.Handler)
 
-	// Open the websocket connection to Discord
 	err = dg.Open()
 	if err != nil {
-		fmt.Println("Error opening Discord session:", err)
-		return
+		log.Fatalf("Failed to open Discord session: %v", err)
 	}
 	defer dg.Close()
 
-	fmt.Println("Bot is now running. Press CTRL-C to exit.")
-	// Wait for a termination signal
+	if err := commands.Register(dg); err != nil {
+		log.Fatalf("Failed to register commands: %v", err)
+	}
+
+	log.Println("Bot is now running. Press CTRL-C to exit.")
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-stop
 
-	fmt.Println("Shutting down bot...")
+	commands.Cleanup(dg)
 }
