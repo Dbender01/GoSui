@@ -3,13 +3,12 @@ package ai
 import (
 	"bytes"
 	"encoding/json"
-	"net/http"
 	"fmt"
 	"io"
+	"net/http"
 
 	"github.com/dbender01/GoSui/internal/config"
 )
-
 
 // AnthropicAPI holds client configuration
 type AnthropicAPI struct {
@@ -159,6 +158,6 @@ func AskAnthropic(question string) (string, error) {
 }
 
 func AskBorys(question string) (string, error) {
-	client := NewAnthropicAPI(config.GetAnthropicKey(), "").WithModel("claude-3-7-sonnet-20250219")
+	client := NewAnthropicAPI(config.GetAnthropicKey(), config.BorysPersonality).WithModel("claude-3-7-sonnet-20250219")
 	return client.AskQuestion(question)
 }
