@@ -2,6 +2,7 @@ package commands
 
 import (
 	"github.com/bwmarrin/discordgo"
+	"github.com/dbender01/GoSui/internal/config"
 )
 
 var registeredCommands []*discordgo.ApplicationCommand
@@ -9,12 +10,13 @@ var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interac
 
 func Register(s *discordgo.Session) error {
 	// Add future command registrations here
+	guildID := config.GetDevGuild()
 	cmdList := []*discordgo.ApplicationCommand{
 		registerTestCommand(),
 	}
 
 	for _, cmd := range cmdList {
-		created, err := s.ApplicationCommandCreate(s.State.User.ID, "", cmd)
+		created, err := s.ApplicationCommandCreate(s.State.User.ID, guildID, cmd)
 		if err != nil {
 			return err
 		}

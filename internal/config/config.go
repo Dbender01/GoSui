@@ -5,3 +5,7 @@ import "os"
 func GetBotToken() string {
 	return os.Getenv("DISCORD_BOT_TOKEN")
 }
+
+func GetDevGuild() string {
+	return os.Getenv("TEST_GUILD_ID")
+}
