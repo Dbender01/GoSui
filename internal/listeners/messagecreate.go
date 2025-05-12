@@ -9,9 +9,7 @@ import (
 )
 
 func HandleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	stopTyping := helpers.StartTyping(s, m.ChannelID)
-	defer stopTyping() 
-	
+
 	// Ignore bot messages
 	if m.Author.Bot {
 		return
@@ -34,6 +32,9 @@ func HandleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if !mentioned {
 		return
 	}
+	
+	stopTyping := helpers.StartTyping(s, m.ChannelID)
+	defer stopTyping() 
 
 	// Remove the mention prefix so we get just the question
 	content := strings.TrimSpace(strings.Replace(m.Content, "<@"+botID+">", "", 1))

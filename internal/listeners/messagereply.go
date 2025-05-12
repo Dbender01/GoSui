@@ -3,7 +3,8 @@ package listeners
 import (
 	"log"
 	"strings"
-
+	"fmt"
+	"sort"
 	"github.com/bwmarrin/discordgo"
 	"github.com/dbender01/GoSui/internal/ai"
 	"github.com/dbender01/GoSui/internal/helpers"
@@ -11,98 +12,64 @@ import (
 
 // fetchConversationHistory retrieves the conversation history for a specific thread
 // starting from the last @ mention of the bot or most recent 10 messages
-func fetchConversationHistory(s *discordgo.Session, channelID string, replyMsgID string, limit int, botID string) ([]ai.Message, error) {
-	
+func fetchConversationHistory(s *discordgo.Session, channelID, replyMsgID string, historyLimit int, botID string) ([]ai.Message, error) {
 	stopTyping := helpers.StartTyping(s, channelID)
-	defer stopTyping() 
-	
-	// Fetch messages in the channel
-	messages, err := s.ChannelMessages(channelID, limit, "", "", replyMsgID)
+	defer stopTyping()
+
+	// Step 1: Get the reply message
+	replyMsg, err := s.ChannelMessage(channelID, replyMsgID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to fetch reply message: %w", err)
 	}
 
-	// Prepare conversation history
-	conversationHistory := make([]ai.Message, 0, len(messages))
-	
-	// Flag to track whether we've found the initial @ mention
-	foundInitialMention := false
-	
-	// Iterate through messages in reverse to build conversation context
-	for i := len(messages) - 1; i >= 0; i-- {
-		msg := messages[i]
-		
-		// Determine the role based on whether the message is from a bot or a user
+	// Step 2: Get up to 9 messages before it
+	prevMessages, err := s.ChannelMessages(channelID, historyLimit - 1, replyMsgID, "", "")
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch previous messages: %w", err)
+	}
+
+	// Step 3: Combine and reverse (so oldest to newest)
+	allMessages := append(prevMessages, replyMsg)
+	sort.Slice(allMessages, func(i, j int) bool {
+		return allMessages[i].Timestamp.Before(allMessages[j].Timestamp)
+	})
+
+	// Step 4: Build conversation
+	conversationHistory := make([]ai.Message, 0, historyLimit)
+	for i := len(allMessages) - 1; i >= 0; i-- {
+		msg := allMessages[i]
+
+		if strings.TrimSpace(msg.Content) == "" {
+			continue
+		}
+
 		role := "user"
 		if msg.Author.Bot {
 			role = "assistant"
 		}
 
-		// Skip empty messages
-		if strings.TrimSpace(msg.Content) == "" {
-			log.Println("Skipping empty message")
-			continue
-		}
-
-		// Check if this message contains a mention of our bot
-		isBotMention := false
-		for _, mention := range msg.Mentions {
-			if mention.ID == botID {
-				isBotMention = true
-				break
+		// Check for @mention, and make sure this is not just a reply in a chain
+		if msg.MessageReference == nil {
+			for _, mention := range msg.Mentions {
+				if mention.ID == botID {
+					log.Printf("Bot mention (non-reply) detected in: %s", msg.Content)
+					conversationHistory = append([]ai.Message{{
+						Role:    role,
+						Content: msg.Content,
+					}}, conversationHistory...)
+					return conversationHistory, nil
+				}
 			}
 		}
 
-		// If this is a bot mention and we haven't found the initial mention yet,
-		// mark this as the start of the conversation
-		if isBotMention && !foundInitialMention && role == "user" {
-			foundInitialMention = true
-			log.Printf("Found initial bot mention: %s", msg.Content)
-		}
 
-		// Skip messages before the initial bot mention
-		if !foundInitialMention {
-			continue
-		}
-
-		// Add message to conversation history
-		conversationHistory = append(conversationHistory, ai.Message{
+		conversationHistory = append([]ai.Message{{
 			Role:    role,
 			Content: msg.Content,
-		})
-
-		// Stop if we've reached the reference message (original bot message)
-		if msg.ID == replyMsgID {
-			break
-		}
+		}}, conversationHistory...)
 	}
 
-	// If we didn't find a mention, use all messages we have
-	if !foundInitialMention {
-		log.Println("No bot mention found, using all available messages")
-		conversationHistory = []ai.Message{}
-		
-		for i := len(messages) - 1; i >= 0; i-- {
-			msg := messages[i]
-			
-			role := "user"
-			if msg.Author.Bot {
-				role = "assistant"
-			}
-			
-			if strings.TrimSpace(msg.Content) != "" {
-				conversationHistory = append(conversationHistory, ai.Message{
-					Role:    role,
-					Content: msg.Content,
-				})
-			}
-			
-			if msg.ID == replyMsgID {
-				break
-			}
-		}
-	}
-
+	// Return all if no mention was found
 	return conversationHistory, nil
 }
 
