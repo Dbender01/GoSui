@@ -18,7 +18,7 @@ func registerAskCommand() *discordgo.ApplicationCommand {
 
 		log.Println(question)
 
-		answer, err := ai.AskBorys(question)
+		answer, err := ai.AskAnthropic(question)
 		if err != nil {
 			s.FollowupMessageCreate(i.Interaction, false, &discordgo.WebhookParams{
 				Content: "Claude had an error: " + err.Error(),

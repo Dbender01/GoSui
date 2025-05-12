@@ -8,6 +8,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/dbender01/GoSui/internal/commands"
+	"github.com/dbender01/GoSui/internal/listeners"
 	"github.com/dbender01/GoSui/internal/config"
 )
 
@@ -20,6 +21,8 @@ func main() {
 	}
 
 	dg.AddHandler(commands.Handler)
+	dg.AddHandler(listeners.HandleReplyMessages)
+	dg.AddHandler(listeners.HandleMessageCreate)
 
 	err = dg.Open()
 	if err != nil {
