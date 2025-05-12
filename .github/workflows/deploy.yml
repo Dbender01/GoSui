@@ -1,0 +1,26 @@
+# .github/workflows/deploy.yml
+name: Deploy Discord Bot
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted  # Your Ubuntu server GitHub runner
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Write .env variables
+        run: |
+          export DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+          export ANTHROPIC_KEY=${ANTHROPIC_KEY}
+          export TEST_GUILD_ID=${TEST_GUILD_ID}
+
+      - name: Docker Compose Up
+          run: |
+          docker compose down
+          docker compose up -d --build
