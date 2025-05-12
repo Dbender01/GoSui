@@ -8,7 +8,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: self-hosted  # Your Ubuntu server GitHub runner
+    runs-on: beehive
 
     steps:
       - name: Checkout repo
@@ -21,6 +21,6 @@ jobs:
           export TEST_GUILD_ID=${TEST_GUILD_ID}
 
       - name: Docker Compose Up
-          run: |
+        run: |
           docker compose down
           docker compose up -d --build
