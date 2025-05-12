@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  go-sui-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: go-sui
+    restart: always
+    environment:
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+      - ANTHROPIC_KEY=${ANTHROPIC_KEY}
+      - TEST_GUILD_ID=${TEST_GUILD_ID}
+    command: ["go", "run", "cmd/bot/main.go"]
