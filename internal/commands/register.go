@@ -9,7 +9,6 @@ var registeredCommands []*discordgo.ApplicationCommand
 var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){}
 
 func Register(s *discordgo.Session) error {
-	// Add future command registrations here
 	guildID := config.GetDevGuild()
 	cmdList := []*discordgo.ApplicationCommand{
 		registerTestCommand(),
