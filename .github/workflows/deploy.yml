@@ -16,9 +16,9 @@ jobs:
 
       - name: Write .env variables
         run: |
-          export DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
-          export ANTHROPIC_KEY=${ANTHROPIC_KEY}
-          export TEST_GUILD_ID=${TEST_GUILD_ID}
+          echo "DISCORD_BOT_TOKEN=${{ secrets.DISCORD_BOT_TOKEN }}" >> .env
+          echo "ANTHROPIC_KEY=${{ secrets.ANTHROPIC_KEY }}" >> .env
+          echo "TEST_GUILD_ID=${{ secrets.TEST_GUILD_ID }}" >> .env
 
       - name: Docker Compose Up
         run: |
