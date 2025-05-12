@@ -8,6 +8,6 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o bot ./cmd/bot
+RUN go build -o bot .
 
-CMD ["./bot"]
+CMD ["./GoSui"]

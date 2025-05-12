@@ -11,4 +11,4 @@ services:
       - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
       - ANTHROPIC_KEY=${ANTHROPIC_KEY}
       - TEST_GUILD_ID=${TEST_GUILD_ID}
-    command: ["go", "run", "cmd/bot/main.go"]
+    command: ["go", "run", "main.go"]
