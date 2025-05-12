@@ -22,6 +22,7 @@ func main() {
 
 	dg.AddHandler(commands.Handler)
 	dg.AddHandler(listeners.HandleReplyMessages)
+	dg.AddHandler(listeners.HandleMessageCreate)
 
 	err = dg.Open()
 	if err != nil {
